@@ -1,0 +1,42 @@
+# Local-only design / triage scratch space.
+# Issues live on GitHub now (see docs/agents/issue-tracker.md).
+.scratch/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.coverage
+htmlcov/
+.hypothesis/
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Adapter runtime artefacts (created at runtime by the adapter)
+*.jsonl
+!docs/**/*.jsonl
