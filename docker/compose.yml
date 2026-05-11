@@ -1,0 +1,55 @@
+# Optional helper for running IB Gateway via gnzsnz/ib-gateway-docker.
+# The adapter's zero-config defaults point at the paper Gateway exposed here.
+#
+# Quick start:
+#   cp docker/.env.example docker/.env
+#   $EDITOR docker/.env               # add your IBKR credentials
+#   docker compose -f docker/compose.yml --env-file docker/.env up -d
+#
+# See docker/README.md for details.
+
+services:
+  ib-gateway:
+    image: ghcr.io/gnzsnz/ib-gateway:stable
+    container_name: ibkr-gateway
+    restart: unless-stopped
+    environment:
+      # IBKR credentials — supplied via docker/.env (which is git-ignored).
+      TWS_USERID: ${TWS_USERID:?TWS_USERID is required; copy docker/.env.example to docker/.env and fill it in}
+      TWS_PASSWORD: ${TWS_PASSWORD:?TWS_PASSWORD is required; copy docker/.env.example to docker/.env and fill it in}
+
+      # Trading mode: must match the adapter's IBKR_TRADING_MODE.
+      TRADING_MODE: ${TRADING_MODE:-paper}
+
+      # Auto-accept dialogs that would otherwise need a human click.
+      BYPASS_WARNING: "yes"
+      TWS_ACCEPT_INCOMING: accept
+
+      # IBKR's nightly auto-restart (~midnight ET) handled by IBC inside the image.
+      AUTO_RESTART_TIME: "11:59 PM"
+
+      # Optional knobs.
+      READ_ONLY_API: ${READ_ONLY_API:-no}
+      TIME_ZONE: ${TIME_ZONE:-Etc/UTC}
+      VNC_SERVER_PASSWORD: ${VNC_SERVER_PASSWORD:-}
+
+    ports:
+      # API ports — bound to localhost only so they're not exposed to the network.
+      - "127.0.0.1:4001:4001"  # live API
+      - "127.0.0.1:4002:4002"  # paper API
+      # VNC for debugging the Gateway GUI — also localhost only.
+      - "127.0.0.1:5900:5900"
+
+    volumes:
+      # Persist Gateway session state across container restarts.
+      - ibkr-gateway-data:/home/ibgateway/Jts
+
+    healthcheck:
+      test: ["CMD-SHELL", "ss -ltn | grep -q ':400[12] '"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  ibkr-gateway-data:
